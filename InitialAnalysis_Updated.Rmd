@@ -1,0 +1,358 @@
+---
+title: "Homework- Initial Analysis on Forest Fire Dataset"
+author: "Alison Jing Huang"
+date: "4/21/2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(kernlab)
+library(ROCR)
+library(psych)
+library(reshape2)
+library(gridExtra)
+library(magrittr)
+
+```
+### 1. Brief Dataset Glimpse
+
+#####The dataset contains 13 different variables, with **X**, **Y**, **MONTH** and **DAY** being categorical, and the remaing 9 attributes being continuous. This multivariable dataset is suitable for setting up a predictive model and using Machine Learning methods to train datasets. 
+
+1. **X**:   x-axis coordinate (from 1 to 9). <span style="color:blue">**It indicates one of the 9 sub-areas**.</blue>
+2. **Y**:   y-axis coordinate (from 1 to 9). <span style="color:blue">**It indicates one of the 9 sub-areas obtained from the division of the area of study along the Y axis. All the areas have the same size**.</blue>
+3. **MONTH**:  <span style="color:blue"> **Month of the year (from 1 to 12)** </blue>
+4. **DAY**:   <span style="color:blue"> **Day of the week (from 1 to 7)** </blue>
+5. **FFMC**:  Fine Moisture Code (from 18.7 to 96.20) - <span style="color:blue">**moisture content of surface litter**</blue>
+6. **DMC**:   Duff Moisture Code (from 1.1 to 291.3) - <span style="color:blue">**rating for average moisture content of loosely connected organic layers**</blue>
+7. **DC**:  Drought Code (from 7.9 to 860.6) - <span style="color:blue">**moisture content of deep, compact, organic layers**</blue>
+8. **ISI**:   Initial Spread Index (from 0 to 56.10) - <span style="color:blue">**rate of fire spreading at its beginning**</blue>
+9. **TEMP**:  <span style="color:blue">**Temperature(Celsius) (from 2.2 to 33.30)** </blue>
+10. **RH**:   <span style="color:blue">**Relative humidity(%) (from 15.0 to 100)** </blue>
+11. **WIND**: <span style="color:blue">**Wind speed(km hr-1) (from 0.40 to 9.40)** </blue>
+12. **RAIN**: <span style="color:blue">**Rain(mm) (from 0.0 to 6.4)**</blue>
+13. **BURNED AREA**: <span style="color:blue">**Total burned area(ha) (from 0 to 1090.84)**</blue>
+
+##### Below shows the first six rows of the forest fire dataset.
+```{r, echo=FALSE, message=FALSE}
+df <- read_csv("/Users/Jing/ForestFire/data/forestfires.csv")
+head(df)
+```
+####Summary
+```{r, echo=FALSE}
+summary(df)
+```
+
+### 2. Exploratory Data Analysis and Visualizations
+#### We can use ggplot2 to better visualize the data, see below sample histogram, relationship between humidity and burn area, as well as the correlations between temperature, drought code, area and month:
+```{r var1, eval=TRUE, echo=FALSE}
+hist(df$area)
+rug(df$area)
+```
+
+#### Relationship between X and AREA
+```{r message=FALSE, echo=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = X, y = area),
+stat = 'identity') + 
+labs(x="X", y="Burn Area") +
+theme_bw()
+
+```
+
+#### Relationship between Y and AREA
+```{r  message=FALSE, echo=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = Y, y = area), 
+stat = 'identity') + 
+labs(x="Y", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between MONTH and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = month, y = area), 
+stat = 'identity') + 
+labs(x="month", y="Burn Area") +
+theme_bw()
+``` 
+
+#### Relationship between DAY and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = day, y = area), 
+stat = 'identity') + 
+labs(x="day", y="Burn Area") +
+theme_bw()
+``` 
+
+#### Relationship between FFMC and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = FFMC, y = area), 
+stat = 'identity') + 
+labs(x="FFMC", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between DMC and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = DMC, y = area), 
+stat = 'identity') + 
+labs(x="DMC", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between DC and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = DC, y = area), 
+stat = 'identity') + 
+labs(x="DC", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between ISI and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = ISI, y = area), 
+stat = 'identity') + 
+labs(x="ISI", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between TEMPERATURE and AREA
+```{r echo=FALSE, message=FALSE}
+df %>% 
+ggplot() +
+geom_bar(aes(x = temp, y = area), 
+stat = 'identity') + 
+labs(x="Temperature", y="Burn Area") +
+theme_bw()
+```
+
+#### Relationship between RH and AREA
+```{r, echo=FALSE}
+df %>% ggplot(aes(x=RH, y=area, col=wind))+ geom_line()+ xlab('Relative Humidity')+ ylab('burned area')+ ggtitle('Relative Humidity vs. Burn Area') 
+```
+
+```{r, echo=FALSE}
+df %>% ggplot(aes(x=temp, y=DC, size=area, col=month))+ geom_point()+ ylab('drought code')+ ggtitle('Temperature vs. Drought Code by Month and Area') 
+```
+
+#### 2A. Factor Analysis using KMO Test
+The next step is then to carefully examine the data variables and determine which ones are most/relatively more important given a number of potential causes. **Factor Analysis** method will play a vital role in this step. Factor analysis is the most widely used multivariate technique to desribe variability among observed, correlated variables in terms of potentially lower number of unobserved variables.It is a statisical method for dimension reduction.
+
+Factor analysis requires numeric input, the dataset needs to be cleaned/transformed - any character types would be converted to numeric type. Hence, we convert "**month**" and "**day**" to numbers as shown in below code:
+
+```
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+```
+This however will give both variables as **NA** values. A second attempt to transform the dataset is then carried out in below code.
+```
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv"
+df1 <- read.csv(url)
+fires$month <- as.numeric((fires$month))
+fires$day <- as.numeric(fires$day)
+library(dplyr)
+head(fires)
+```
+**The result is shown as below:**
+```{r, echo = FALSE, message=TRUE}
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv"
+fires <- read.csv(url)
+fires$month <- as.numeric((fires$month))
+fires$day <- as.numeric(fires$day)
+library(dplyr)
+head(fires)
+```
+In order to find the relevant variables, a **KMO** test is needed to answer the question.KMO stands for **Kaiser-Meyer-olkin** test. It's a measure of the proportion of variance among variables that might be a common variances. **The lower the proportion, the more suited your data is to Factor Analysis**. 
+
+#### Checking adequacy of factor analysis
+There are two major criteria to check the adequacy of the factor analysis to help identify more relevant variables.
+
+**1. Criteria of sample size adequacy**: sample size of 300 and above is good, 500 and more is considered very good.In our dataset, the sample size is 517, which implies it is suitable for factor analysis.
+
+**2. KMO's sampling adequacy criteria with **MSA(individual measures of sampling adequacy of each variable)**:** 
+The range of KMO is from 0.0 to 1.0 and if the calculated percentage is > 0.5, the variable is desired value. Variables with MSA being < 0.5 indicate that items do not belong to a group and may be removed from the factor analysis.
+
+To successfully perform KMO test, a R package named `Psych` is installed and used with the following code:
+
+```
+library(psych)
+fires_corr <- cor(fires)
+KMO(fires_corr)
+```
+**The result shows that the overall MSA is 0.57 which is greater than 0.5 that is desired value.**
+
+```{r, echo= FALSE }
+library(psych)
+fires_corr <- cor(fires)
+KMO(fires_corr)
+```
+
+Based on the table shown above, we can <span style="color:red">eliminate</span> **MONTH**, **RH (Relative Humidity)**,and **RAIN** and keep <span style="color:green">**X**</span>,  <span style="color:green">**Y**</span>,  <span style="color:green">**DAY**</span>,  <span style="color:green">**FFMC**</span>,  <span style="color:green">**DMC**</span>,  <span style="color:green">**DC**</span>, <span style="color:green"> **ISI**</span>,  <span style="color:green">**WIND**</span> and  <span style="color:green"> **AREA**</span> for further metric evalulation.
+
+So we exclude variables of **month**, **RH**, and **rain**, and keep the result to two decimals.
+```{r, echo= FALSE, message = FALSE }
+fires$month <- NULL
+fires$RH <- NULL
+fires$rain <- NULL
+fires_corr <- cor(fires)
+round(fires_corr, 2)
+```
+
+At this point we don't know how many factor variables to use for further analysis, The `nFactors` package
+is then first installed to offer a suite of functions to aid in this decision and plot a Scree-plot to visualize the scenario.The Scree Test is a graphical method first proposed by Cattell(1966) to plot the eigenvalues.Cattell suggests to find the place where the smooth decrease of eigenvalues appears to level off to the right of the 
+plot. In this case, we could probably retain 2 or 3 factors.
+
+```{r, echo= FALSE, message= FALSE}
+library(nFactors)
+ev <-eigen(cor(fires))   # get eigenvalues
+ap <- parallel(subject=nrow(fires), var=ncol(fires), rep =100, cent = 0.05)
+nS <- nScree(x=ev$values, aparallel =ap$eigen$qevpea)
+plotnScree(nS)
+```
+
+According to above **Scree-plot** result, all of Eigenvalues, Parallel Analysis(AF) as well as Optimal Coordinates(OC) give n = 3. 
+
+#### Factor Loadings: Factors and Variables
+In the next plot using ggplot2, I will demonstrate the relationships of factors and variables. 
+
+```{r, echo= FALSE, message = FALSE }
+nfactors <- 3
+nvariables <- dim(fires_corr)[1]
+factors <-fa(r=fires_corr, nfactors =nfactors, rotate = "oblimin")
+
+# Plot Eigenvalues / Represented Variance
+eigenvalues <- data.frame(factors$e.values)
+colnames(eigenvalues) <- c("Values")
+eigenvalues$Number <- 1:nrow(fires_corr)
+
+eigenvalues$RepresentedVariance <- NA
+for (i in 1:nrow(fires_corr)) {
+    eigenvalues$RepresentedVariance[i] <- sum(eigenvalues$Values[1:i])/sum(eigenvalues$Values) * 
+        100
+}
+eigenvalues$RepresentedVariance_text <- paste(round(eigenvalues$RepresentedVariance, 
+    0), " %")
+
+#e1 <- ggplot(eigenvalues, aes(Number, y = Values), group = 1)
+#e1 <- e1 + geom_bar(stat = "identity")
+#e1 <- e1 + geom_line(aes(y = Values), group = 2)
+#e1 <- e1 + xlab("Number [-]")
+#e1 <- e1 + ylab("Eigenvalue [-]")
+#e1 <- e1 + geom_hline(aes(yintercept = 1), col = "red")
+#e1 <- e1 + geom_text(aes(label = RepresentedVariance_text), nudge_y = 0.2)
+#e1 <- e1 + ggtitle("Eigenvalues and explained Variance")
+#e1 <- e1 + theme_bw()
+#e1 <- e1 + scale_x_continuous(breaks = seq(1, 10, 1))
+#e1
+
+loadings_mat <- as.data.frame(matrix(nrow =nvariables, ncol = nfactors))
+loadings_mat$Variable <- colnames(fires)
+for( i in 1: nfactors) {
+  for(j in 1: nvariables) {
+  loadings_mat[j,i] <- factors$loadings[j,i]
+  }
+}
+colnames(loadings_mat) <- c("Factor1", "Factor2"," Factor3", "Variable")
+
+loadings_mat_gather <- loadings_mat %>% gather("Factor", "Value", 1:nfactors)
+
+loadings_mat$Zero <- 0
+f1 <- ggplot(loadings_mat, aes(Zero, Zero))
+f1 <- f1 + geom_segment(aes(xend = Factor1, yend=Factor2), 
+                        arrow = arrow(length = unit(0.3,"cm")), col="red")  # Variables
+f1 <- f1 + geom_text(aes(x = Factor1, y = Factor2, label = Variable))  # Labels
+f1 <- f1 + geom_segment(aes(xend = 1, yend=0), 
+                        arrow = arrow(length = unit(0.3,"cm")), col="black")  # X-Axis
+f1 <- f1 + geom_segment(aes(xend = 0, yend=1), 
+                        arrow = arrow(length = unit(0.3,"cm")), col="black")  # X-Axis
+f1 <- f1 + xlab("Factor 1")
+f1 <- f1 + ylab("Factor 2")
+f1 <- f1 + ggtitle("Factor Loadings")
+f1 <- f1 + theme_bw(base_size=11)
+f1 <- f1 + theme(legend.position="none")
+f1
+
+g1 <- ggplot(loadings_mat_gather, aes(Variable, abs(Value), fill=Value))
+g1 <- g1 + facet_wrap(~ Factor, nrow =1)
+g1 <- g1 + geom_bar(stat="identity")
+g1 <- g1 + coord_flip()
+g1 <- g1 + scale_fill_gradient2(name = "Loading", high = "green", mid ="blue", low="red",
+                                midpoint=0, guide=F)
+g1 <- g1 +xlab("Variables")
+g1 <- g1 +ylab("Factor Loading")
+g1 <- g1 +ggtitle("Factors")
+g1 <- g1 +theme(axis.text=element_text(size=12), 
+               axis.title =element_text(size=12, face="bold"))
+g1 <- g1+theme(plot.title =element_text(size=12))
+g1 <- g1+theme_bw(base_size=12)
+g1 
+```
+
+Based on above Factor Loading plot, we can deduce that the following relationships:
+
+* **DC**, **DMC**, and **wind** load Factor 1
+* **X** and **Y** load on Factor 2
+* **FFMC** and **ISI** load on Factor 3
+
+Next, a reduced correlation matrix(heatmap) will be constructed based on above three Factor Loadings.To do this, 
+R packages like `reshape2` and `gridExtra` are needed to complete the graph. 
+
+```{r, echo=FALSE, message= FALSE}
+
+corr_reduced <- fires_corr
+for (i in 1: nvariables) {
+  corr_reduced[i,i] <- factors$communality[i]
+}
+
+corr_melt <- corr_reduced %>% melt()
+corr_melt <- corr_melt[order(corr_melt$Var2), ]
+
+p1 <- ggplot(corr_melt, aes(Var1, Var2, fill=abs(value)))
+p1 <- p1 + geom_tile()
+p1 <- p1 + geom_text(aes(label=round(value, 2)), size = 4)
+p1 <- p1 + theme_bw(base_size = 10)
+p1 <- p1 + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(),axis.title.y = element_blank(), plot.margin= unit(c(3,1,0,0), "mm"))
+p1 <- p1 + scale_fill_gradient(low = "white", high ="purple") + guides(fill=F)
+
+p2 <- ggplot(loadings_mat_gather, aes(Variable, abs(Value), fill=Factor))
+p2 <- p2 + geom_bar(stat= "identity") + coord_flip()
+p2 <- p2 + ylab("Factor Loading")
+p2 <- p2 + theme_bw(base_size = 8)
+pw <- p2 + theme(axis.text.y=element_blank(), 
+                  axis.title.y = element_blank(), 
+                  plot.margin = unit(c(3, -5, -2, 3), "mm"))
+grid.arrange(p1, p2, ncol=2, widths =c(2,1))
+```
+
+**Interpretation of the reduced correlation matrix:**
+Based on above heatmap,  **DC** and ** DMC** has 0.68 coefficient correlation(Factor 1), **X** and **Y** has a 0.54 coefficient correlation(Factor 2), and **ISI** and **FFMC** has 0.53 coefficient correlations(Factor 3).
+
+
+
+
+
+

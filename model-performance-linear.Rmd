@@ -11,12 +11,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r echo=FALSE, message=FALSE}
+```{r echo=FALSE}
 library(ggplot2)
 library(magrittr)
 library(tidyverse)
 library(knitr)
-library(bloom)
+
 ```
 
 
@@ -127,7 +127,6 @@ theme_bw()
 ### Linear model on Variable "X"
 ```{r echo=FALSE, message=FALSE}
 lm.x <- lm(area ~ X, data=df)
-attach(forestfires)
 lm.x=lm(area~X)
 lm.x
 summary(lm.x)
@@ -136,7 +135,6 @@ summary(lm.x)
 ### Linear model on Variable "Y"
 ```{r echo=FALSE, message=FALSE}
 lm.y <- lm(area ~ Y, data=df)
-attach(forestfires)
 lm.y=lm(area~Y)
 lm.y
 summary(lm.y)
