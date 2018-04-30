@@ -1,9 +1,73 @@
+% !TEX encoding = UTF-8 Unicode
 ---
-title: "Model Performance"
-author: "cbrown"
-date: "April 11, 2018"
-output: html_document
+title: "Project Performance"
+author: "Alison Jing Huang"
+date: "4/21/2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
 ---
 
-This is the document for tracking model performance ...
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+```{r echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(kernlab)
+library(ROCR)
+library(psych)
+library(ggplot2)
+library(magrittr)
+library(knitr)
+```
+### Load the data
+```{r echo=FALSE, message=FALSE}
+df <- read.table(file="~/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire/data/forestfires.csv", sep = ",", header = T)
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+```
+
+# check the likelihood of Fire Observations
+```{r echo=FALSE, message=FALSE}
+round(table(df$area==0)/nrow(df),2)
+```
+The result shows that there is 48% percent of the time there is no observation of a forest fire.
+
+## Linear Regression Models
+###Boxplot of forest fire area for different X's
+```{r echo=FALSE, message=FALSE}
+par (mfrow=c(1,1))
+df1 <- df[df$area>0,]
+boxplot(log(area)~as.factor(X), data=df1, xlab="X", ylab="fire area", main ="Forest Fire Area for Different X's")
+```
+
+###Boxplot of forest fire area for different Y's
+```{r echo=FALSE, message=FALSE}
+boxplot(log(area)~as.factor(Y), data=df1, xlab="Y", ylab="fire area", main ="Forest Fire Area for Different Y's")
+```
+
+###Boxplot of forest fire area for different Months
+```{r echo=FALSE, message=FALSE}
+boxplot(log(area)~as.factor(month), data=df1, xlab="month", ylab="fire area", main ="Forest Fire Area for Different Months")
+```
+
+Here based on a total of 517 fire observations and distributions across different months, we can deduce that there are more fire observations in August and September.
+
+
+###Boxplot of forest fire area for different days
+```{r rcho=FALSE, message=FALSE}
+boxplot(log(area)~day, data=df1, xlab="day", ylab="fire area", main="Forest Fire Area for Different Days")
+
+reg_day <-lm(log(area)~ day, data= df1)
+summary(reg_day)
+```
+###Scatterplots of all different predictor variables.
+```{r echo=FALSE, message=FALSE}
+par(mfrow =c(3,3))
+plot(log(area) ~ FFMC + DMC + DC + ISI + temp + RH + wind + rain, data=df1)
+par(mfrow=c(1,1))
+```
