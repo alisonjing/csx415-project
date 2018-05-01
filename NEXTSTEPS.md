@@ -1,6 +1,6 @@
 ## Next Steps to continue the Forest Fires Prediction Project
 
-###Items completed so far:
+### Items completed so far:
 
 * Identify the Problem
 
