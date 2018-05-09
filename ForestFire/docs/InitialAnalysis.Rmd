@@ -1,0 +1,122 @@
+---
+title: "Homework- Initial Analysis on Forest Fire Dataset"
+author: "Alison Jing Huang"
+date: "4/15/2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(kernlab)
+library(ROCR)
+library(psych)
+
+```
+### 1. Brief Dataset Glimpse
+
+#####The dataset contains 13 different variables, with **X**, **Y**, **MONTH** and **DAY** being categorical, and the remaing 9 attributes being continuous. This multivariable dataset is suitable for setting up a predictive model and using Machine Learning methods to train datasets. 
+
+1. **X**:   x-axis coordinate (from 1 to 9). <span style="color:blue">**It indicates one of the 9 sub-areas**.</blue>
+2. **Y**:   y-axis coordinate (from 1 to 9). <span style="color:blue">**It indicates one of the 9 sub-areas obtained from the division of the area of study along the Y axis. All the areas have the same size**.</blue>
+3. **MONTH**:  <span style="color:blue"> **Month of the year (from 1 to 12)** </blue>
+4. **DAY**:   <span style="color:blue"> **Day of the week (from 1 to 7)** </blue>
+5. **FFMC**:  Fine Moisture Code (from 18.7 to 96.20) - <span style="color:blue">**moisture content of surface litter**</blue>
+6. **DMC**:   Duff Moisture Code (from 1.1 to 291.3) - <span style="color:blue">**rating for average moisture content of loosely connected organic layers**</blue>
+7. **DC**:  Drought Code (from 7.9 to 860.6) - <span style="color:blue">**moisture content of deep, compact, organic layers**</blue>
+8. **ISI**:   Initial Spread Index (from 0 to 56.10) - <span style="color:blue">**rate of fire spreading at its beginning**</blue>
+9. **TEMP**:  <span style="color:blue">**Temperature(Celsius) (from 2.2 to 33.30)** </blue>
+10. **RH**:   <span style="color:blue">**Relative humidity(%) (from 15.0 to 100)** </blue>
+11. **WIND**: <span style="color:blue">**Wind speed(km hr-1) (from 0.40 to 9.40)** </blue>
+12. **RAIN**: <span style="color:blue">**Rain(mm) (from 0.0 to 6.4)**</blue>
+13. **BURNED AREA**: <span style="color:blue">**Total burned area(ha) (from 0 to 1090.84)**</blue>
+
+##### Below shows the first six rows of the forest fire dataset.
+```{r, echo=FALSE, message=FALSE}
+df <- read_csv("/Users/Jing/ForestFire/data/forestfires.csv")
+head(df)
+```
+####Summary
+```{r, echo=FALSE}
+summary(df)
+```
+
+### 2. Exploratory Data Analysis and Visualizations
+#### We can use ggplot2 to better visualize the data, see below sample histogram, relationship between humidity and burn area, as well as the correlations between temperature, drought code, area and month:
+```{r var1, eval=TRUE, echo=FALSE}
+hist(df$area)
+rug(df$area)
+```
+
+```{r, echo=FALSE}
+df %>% ggplot(aes(x=RH, y=area, col=wind))+ geom_line()+ xlab('Relative Humidity')+ ylab('burned area')+ ggtitle('Relative Humidity vs. Burn Area') 
+```
+
+```{r, echo=FALSE}
+df %>% ggplot(aes(x=temp, y=DC, size=area, col=month))+ geom_point()+ ylab('drought code')+ ggtitle('Temperature vs. Drought Code by Month and Area') 
+```
+
+#### 2A. Factor Analysis using KMO Test
+The next step is then to carefully examine the data variables and determine which ones are most/relatively more important given a number of potential causes. **Factor Analysis** method will play a vital role in this step. Factor analysis is the most widely used multivariate technique to desribe variability among observed, correlated variables in terms of potentially lower number of unobserved variables.It is a statisical method for dimension reduction.
+
+Factor analysis requires numeric input, the dataset needs to be cleaned/transformed - any character types would be converted to numeric type. Hence, we convert "**month**" and "**day**" to numbers as shown in below code:
+
+```
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+```
+This however will give both variables as **NA** values. A second attempt to transform the dataset is then carried out in below code.
+```
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv"
+df1 <- read.csv(url)
+fires$month <- as.numeric((fires$month))
+fires$day <- as.numeric(fires$day)
+library(dplyr)
+head(fires)
+```
+**The result is shown as below:**
+```{r, echo = FALSE, message=TRUE}
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv"
+fires <- read.csv(url)
+fires$month <- as.numeric((fires$month))
+fires$day <- as.numeric(fires$day)
+library(dplyr)
+head(fires)
+```
+In order to find the relevant variables, a **KMO** test is needed to answer the question.KMO stands for **Kaiser-Meyer-olkin** test. It's a measure of the proportion of variance among variables that might be a common variances. **The lower the proportion, the more suited your data is to Factor Analysis**. 
+
+#### Checking adequacy of factor analysis
+There are two major criteria to check the adequacy of the factor analysis to help identify more relevant variables.
+
+**1. Criteria of sample size adequacy**: sample size of 300 and above is good, 500 and more is considered very good.In our dataset, the sample size is 517, which implies it is suitable for factor analysis.
+
+**2. KMO's sampling adequacy criteria with **MSA(individual measures of sampling adequacy of each variable)**:** 
+The range of KMO is from 0.0 to 1.0 and if the calculated percentage is > 0.5, the variable is desired value. Variables with MSA being < 0.5 indicate that items do not belong to a group and may be removed from the factor analysis.
+
+To successfully perform KMO test, a R package named `Psych` is installed and used with the following code:
+
+```
+library(psych)
+fires_corr <- cor(fires)
+KMO(fires_corr)
+```
+**The result shows that the overall MSA is 0.57 which is greater than 0.5 that is desired value.**
+
+```{r, echo= FALSE, message = FALSE }
+library(psych)
+fires_corr <- cor(fires)
+KMO(fires_corr)
+```
+
+Based on the table shown above, we can <span style="color:red">eliminate</span> **MONTH**, **RH (Relative Humidity)**,and **RAIN** and keep <span style="color:green">**X**</span>,  <span style="color:green">**Y**</span>,  <span style="color:green">**DAY**</span>,  <span style="color:green">**FFMC**</span>,  <span style="color:green">**DMC**</span>,  <span style="color:green">**DC**</span>, <span style="color:green"> **ISI**</span>,  <span style="color:green">**WIND**</span> and  <span style="color:green"> **AREA**</span> for further metric evalulation.
+
+
+
+

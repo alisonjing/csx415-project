@@ -1,0 +1,41 @@
+---
+title: "model train"
+author: "Alison Jing Huang"
+date: "4/21/2018"
+output:
+
+html_document: default
+pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r echo=FALSE}
+
+library("ProjectTemplate")
+setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire")
+load.project()
+
+library(tidyverse)
+library(magrittr)
+library(caret)
+library(lattice)
+library(ggplot2)
+library(knitr)
+library(devtools)
+
+df <- read.csv(file="https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.csv")
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+
+model <- lm (area~ ., df)
+p <- predict (model, df)
+error <-  p - df[["area"]]
+
+# Calculate RMSE
+sqrt(mean(error^2))
+```
+

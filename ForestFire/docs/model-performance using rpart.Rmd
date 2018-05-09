@@ -1,0 +1,132 @@
+---
+title: "More Data using Machine Learning Methods"
+author: "Alison Jing Huang"
+date: "5/6/2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire")
+library('ProjectTemplate')
+load.project()
+```
+
+```{r echo=FALSE, message=FALSE}
+setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire")
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(devtools)
+library(randomForest)
+library(tree)
+library(RColorBrewer)
+```
+
+## Load the data
+```{r, echo=FALSE, message=FALSE}
+df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire/data/forestfires.csv')
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+```
+
+## Create the training and test dataset with 80/20 Rule
+```{r}
+set.seed(517)
+trainRowNumbers <- createDataPartition(df$area, p = 0.8, list = FALSE)
+trainData <- df[trainRowNumbers,]
+testData <- df[-trainRowNumbers,]
+
+x = trainData[, 1:12]
+y = trainData$area
+
+```
+
+## Validate 80/20 rule by checking size of training datset vs. test data
+```{r}
+# Dimension of trainning set
+dim(trainData)
+# Dimension of test set
+dim(testData)
+```
+
+## Preprocessing & Trainning
+First check to see the data contains any missing values by using anyNA() method.
+"FALSE" indicates the the dataset contains all the values.
+```{r rcho = FALSE, message= FALSE}
+anyNA(df)
+```
+
+## 10-Fold Cross Validation 
+```{r}
+trctrl <- trainControl(method='repeatedcv', number = 10, verboseIter = TRUE)
+set.seed(1034)
+dtree_fit1 <- train(area ~., data= trainData, method ="rpart", parms = list(split = "information"), trControl = trctrl, tuneLength= 10)
+dtree_fit1
+plot(dtree_fit1)
+```
+
+
+## 5 X 5 Fold Cross-Validation
+```{r}
+trctrl <- trainControl(method='repeatedcv', number = 5, repeats = 5, verboseIter = TRUE)
+set.seed(1034)
+dtree_fit2 <- train(area ~., data= trainData, method ="rpart", parms = list(split = "information"), trControl = trctrl, tuneLength= 10)
+dtree_fit2
+plot(dtree_fit2)
+
+```
+
+## Recursive Feature Elimination(RFE) for choosing important features
+
+```{r}
+set.seed(1034)
+options(warn=-1)
+
+subsets <- c(1:12)
+ctrl <- rfeControl(functions=rfFuncs, method='repeatedcv', repeats= 5, verbose = FALSE)
+
+lmProfile <- rfe(x=trainData[, 1:12], y=trainData$area, size=subsets, rfeControl = ctrl)
+
+lmProfile
+```
+
+Based on above RFE method result, the 5 most important features are identified as
+**DMC**, **DC**, **temp**, **month** and **ISI**.
+
+
+## Decision Tree Model
+
+### Model 1
+1. Use all the factor variables with respect to the resposne varialble **AREA**
+```{r}
+model1 <- rpart(area~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + RH + wind + rain, data = trainData)
+model1$terms <- eval(model1$call$formula)
+summary(model1)
+rpart.plot(model1)
+plotcp(model1)
+```
+
+### Model 2
+2. Use the five important attribute variables namely **DMC**, **DC**, **temp**, **month** and **ISI** with respect to the response varialble **AREA**
+```{r}
+model2 <- rpart(area~ DMC + DC + temp + month + ISI, data = trainData)
+model2$terms <- eval(model2$call$formula)
+summary(model2)
+rpart.plot(model2)
+plotcp(model2)
+```
+
+

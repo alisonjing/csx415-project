@@ -1,0 +1,168 @@
+---
+title: "More Data using Machine Learning Methods"
+author: "Alison Jing Huang"
+date: "5/6/2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire")
+library('ProjectTemplate')
+load.project()
+```
+
+```{r echo=FALSE, message=FALSE}
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(devtools)
+library(devtools)
+library(randomForest)
+library(tree)
+library(RColorBrewer)
+library(ROCR)
+library(e1071)
+```
+
+### Load the data
+```{r, echo=FALSE, message=FALSE}
+df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire/data/forestfires.csv')
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+```
+
+### Create the training and test dataset with 70/30 Rule
+```{r}
+set.seed(517)
+trainRowNumbers <- createDataPartition(df$area, p = 0.7, list = FALSE)
+trainData <- df[trainRowNumbers,]
+testData <- df[-trainRowNumbers,]
+
+x = trainData[, 1:12]
+y = trainData$area
+
+```
+
+### Validate 80/20 rule by checking size of training datset vs. test data
+```{r}
+# Dimension of trainning set
+dim(trainData)
+# Dimension of test set
+dim(testData)
+```
+
+### Preprocessing & Trainning
+First check to see the data contains any missing values by using anyNA() method.
+"FALSE" indicates the the dataset contains all the values.
+```{r rcho = FALSE, message= FALSE}
+anyNA(df)
+```
+
+### 10-Fold Cross Validation 
+```{r}
+trctrl <- trainControl(method='repeatedcv', number = 10, verboseIter = TRUE)
+set.seed(1034)
+dtree_fit1 <- train(area ~., data= trainData, method ="rpart", parms = list(split = "information"), trControl = trctrl, tuneLength= 10)
+dtree_fit1
+plot(dtree_fit1)
+```
+
+### Random Forest Model Fitting with Training dataset:
+```{r}
+rf1 <- randomForest(area ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + RH + wind + rain, data=trainData)
+print(rf1)
+```
+
+### Model Fitting with Testing dataset
+```{r}
+rf2 <- randomForest(area ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + RH + wind + rain, data=testData)
+print(rf2)
+```
+
+
+### 5 X 5 Fold Cross-Validation
+```{r}
+trctrl <- trainControl(method='repeatedcv', number = 5, repeats = 5, verboseIter = TRUE)
+set.seed(1034)
+dtree_fit2 <- train(area ~., data= trainData, method ="rpart", parms = list(split = "information"), trControl = trctrl, tuneLength= 10)
+dtree_fit2
+plot(dtree_fit2)
+
+```
+
+### Recursive Feature Elimination(RFE) for choosing important features
+
+```{r}
+set.seed(1034)
+options(warn=-1)
+
+subsets <- c(1:12)
+ctrl <- rfeControl(functions=rfFuncs, method='repeatedcv', repeats= 5, verbose = FALSE)
+
+lmProfile <- rfe(x=trainData[, 1:12], y=trainData$area, size=subsets, rfeControl = ctrl)
+
+lmProfile
+```
+
+Based on above RFE method result, the 5 most important features are identified as
+**DMC**, **DC**, **temp**, **month** and **ISI**.
+
+
+### Decision Tree Model
+
+#### Model 1
+1. Use all the factor variables with respect to the resposne varialble **AREA**
+```{r}
+tree_1 <- rpart(area~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + RH + wind + rain, data = trainData)
+tree_1$terms <- eval(tree_1$call$formula)
+summary(tree_1)
+rpart.plot(tree_1)
+plotcp(tree_1)
+```
+
+#### Predictions from Tree Model 1
+```{r}
+testData <- testData[complete.cases(testData), ]
+pred1 <- predict(tree_1, newdata = testData)
+```
+
+
+#### Model 2
+2. Use the five important attribute variables namely **DMC**, **DC**, **temp**, **month** and **ISI** with respect to the response varialble **AREA**
+```{r}
+tree_2 <- rpart(area~ DMC + DC + temp + month + ISI, data = trainData)
+tree_2$terms <- eval(model2$call$formula)
+summary(tree_2)
+rpart.plot(tree_2)
+plotcp(tree_2)
+```
+
+#### Predictions from Tree Model 2
+```{r}
+predictions.tree_2 <- predict(tree_2, newdata = testData)
+```
+
+#### Calculate error = actual number of cases - predicted number of cases
+```{r}
+library(caret)
+error <- testData$area - predictions.tree_1
+sqrt(mean(error))
+```
+
+```{r}
+error <- testData$area - predictions.tree_2
+sqrt(mean(error))
+```

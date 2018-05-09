@@ -1,0 +1,11 @@
+Package: FF
+Type: Package
+Title: Data Science Project for Forest Fires Prediction
+Version: 1.0.1
+Author: Who wrote it
+Maintainer: Alison Jing Huang <jhuan482@mail.ccsf.edut>
+Description: This model determines the important attributes of forest fires burned area in Nothern Portugal National Parl.
+Depends: R(>=3.4.4)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1.9000

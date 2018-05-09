@@ -1,0 +1,297 @@
+---
+title: "Model Performance on Forest Fire Dataset"
+author: "Alison Jing Huang"
+date: "4/15/2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo=FALSE, message=FALSE}
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(caret)
+library(rpart)
+library(devtools)
+library(randomForest)
+library(gridExtra)
+```
+
+
+## Load the data
+```{r, echo=FALSE, message=FALSE}
+df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire/data/forestfires.csv')
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+```
+
+After we conducted initial analysis on the dataset, the next step is to create a linear model on the first fires data. Recall earlier we have transform the raw datset to all numerical variables, and renamed it as `fires`, next use ggplot2 to examine different variable with respect to the response variable - **"AREA"**.
+
+
+## Relationship between X and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = X, y = area),
+stat = 'identity') + 
+labs(x="X", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between Y and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = Y, y = area), 
+stat = 'identity') + 
+labs(x="Y", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between MONTH and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = month, y = area), 
+stat = 'identity') + 
+labs(x="month", y="Burn Area") +
+theme_bw()
+``` 
+
+## Relationship between DAY and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = day, y = area), 
+stat = 'identity') + 
+labs(x="day", y="Burn Area") +
+theme_bw()
+``` 
+
+## Relationship between FFMC and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = FFMC, y = area), 
+stat = 'identity') + 
+labs(x="FFMC", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between DMC and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = DMC, y = area), 
+stat = 'identity') + 
+labs(x="DMC", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between DC and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = DC, y = area), 
+stat = 'identity') + 
+labs(x="DC", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between ISI and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = ISI, y = area), 
+stat = 'identity') + 
+labs(x="ISI", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between TEMPERATURE and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = temp, y = area), 
+stat = 'identity') + 
+labs(x="Temperature", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between RH and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = RH, y = area), 
+stat = 'identity') + 
+labs(x="RH", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between wind and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = wind, y = area), 
+stat = 'identity') + 
+labs(x="Wind", y="Burn Area") +
+theme_bw()
+```
+
+## Relationship between rain and AREA
+```{r}
+df %>% 
+ggplot() +
+geom_bar(aes(x = rain, y = area), 
+stat = 'identity') + 
+labs(x="Rain", y="Burn Area") +
+theme_bw()
+```
+
+
+# Model Performance
+
+##1. Linear model on Variable "X"
+```{r}
+lm.x <- lm(df$area ~ df$X, data=df)
+lm.x=lm(df$area~df$X)
+lm.x
+summary(lm.x)
+layout(matrix(c(1,2,3,4),2,2))
+g1 <-plot(lm.x)
+```
+
+##2.  Linear model on Variable "Y"
+```{r}
+lm.y <- lm(df$area ~ df$Y, data=df)
+lm.y=lm(df$area~df$Y)
+lm.y
+summary(lm.y)
+layout(matrix(c(1,2,3,4),2,2))
+g2 <-plot(lm.y)
+```
+
+##3.  Linear model on Variable "month"
+```{r}
+lm.month <- lm(df$area ~ df$month, data=df)
+lm.month=lm(df$area~df$month)
+lm.month
+summary(lm.month)
+layout(matrix(c(1,2,3,4),2,2))
+g3 <-plot(lm.month)
+```
+
+##4.  Linear model on Variable "day"
+```{r}
+lm.day <- lm(df$area ~ df$day, data=df)
+lm.day=lm(df$area~df$day)
+lm.day
+summary(lm.day)
+layout(matrix(c(1,2,3,4),2,2))
+g4 <-plot(lm.day)
+```
+
+##5.  Linear model on Variable "FFMC"
+```{r}
+lm.FFMC <- lm(df$area ~ df$FFMC, data=df)
+lm.FFMC=lm(df$area~df$FFMC)
+lm.FFMC
+summary(lm.FFMC)
+layout(matrix(c(1,2,3,4),2,2))
+g5 <-plot(lm.FFMC)
+```
+
+##6.  Linear model on Variable "DMC"
+```{r}
+lm.DMC <- lm(df$area ~ df$DMC, data=df)
+lm.DMC=lm(df$area~df$DMC)
+lm.DMC
+summary(lm.DMC)
+layout(matrix(c(1,2,3,4),2,2))
+g6 <-plot(lm.DMC)
+```
+
+##7.  Linear model on Variable "DC"
+```{r}
+lm.DC <- lm(df$area ~ df$DC, data=df)
+lm.DC=lm(df$area~df$DC)
+lm.DC
+summary(lm.DC)
+layout(matrix(c(1,2,3,4),2,2))
+g7 <-plot(lm.DC)
+```
+
+##8.  Linear model on Variable "ISI"
+```{r}
+lm.ISI <- lm(df$area ~ df$ISI, data=df)
+lm.ISI=lm(df$area~df$ISI)
+lm.ISI
+summary(lm.ISI)
+layout(matrix(c(1,2,3,4),2,2))
+g8 <-plot(lm.ISI)
+```
+
+##9.  Linear model on Variable "temp"
+```{r}
+lm.temp <- lm(df$area ~ df$temp, data=df)
+lm.temp=lm(df$area~df$temp)
+lm.temp
+summary(lm.temp)
+layout(matrix(c(1,2,3,4),2,2))
+g9 <-plot(lm.temp)
+```
+
+##10.  Linear model on Variable "RH"
+```{r}
+lm.RH <- lm(df$area ~ df$RH, data=df)
+lm.RH=lm(df$area~df$RH)
+lm.RH
+summary(lm.RH)
+layout(matrix(c(1,2,3,4),2,2))
+g10 <-plot(lm.RH)
+```
+
+##11. Linear model on Variable "wind"
+```{r}
+lm.wind <- lm(df$area ~ df$wind, data=df)
+lm.wind=lm(df$area~df$wind)
+summary(lm.wind)
+layout(matrix(c(1,2,3,4),2,2))
+g11 <- plot(lm.wind)
+```
+
+##12. Linear model on Variable "rain"
+```{r}
+lm.rain <- lm(df$area ~ df$rain, data=df)
+lm.rain=lm(df$area~df$rain)
+lm.rain
+summary(lm.rain)
+layout(matrix(c(1,2,3,4),2,2))
+g12 <- plot(lm.rain)
+```
+
+##13. Linear model including on the 12 attribute variables
+
+```{r}
+lm_all <- lm(df$area ~ ., data=df)
+lm_all=lm(df$area~ df$X + df$Y + df$month + df$day + df$FFMC + df$DMC + df$DC + df$ISI + df$temp + df$RH + df$wind + df$rain, data = df)
+lm_all
+summary
+layout(matrix(c(1,2,3,4),2,2))
+g13<- plot(lm_all)
+```
+
+
+
+
+
