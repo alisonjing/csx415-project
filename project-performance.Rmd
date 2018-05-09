@@ -1,4 +1,3 @@
-% !TEX encoding = UTF-8 Unicode
 ---
 title: "Project Performance"
 author: "Alison Jing Huang"
@@ -13,7 +12,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE}
+suppressMessages(library(tidyverse))
 library(tidyverse)
 library(dplyr)
 library(kernlab)
@@ -21,11 +21,10 @@ library(ROCR)
 library(psych)
 library(ggplot2)
 library(magrittr)
-library(knitr)
 ```
 ### Load the data
 ```{r echo=FALSE, message=FALSE}
-df <- read.table(file="~/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire/data/forestfires.csv", sep = ",", header = T)
+df <- read.table(file="~/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire/data/forestfires.csv", sep = ",", header = T)
 df$month <- as.numeric(df$month)
 df$day <- as.numeric(df$day)
 head(df)
@@ -70,4 +69,6 @@ summary(reg_day)
 par(mfrow =c(3,3))
 plot(log(area) ~ FFMC + DMC + DC + ISI + temp + RH + wind + rain, data=df1)
 par(mfrow=c(1,1))
+
 ```
+
