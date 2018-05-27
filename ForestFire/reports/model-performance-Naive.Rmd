@@ -1,0 +1,195 @@
+---
+title: "Naive Model Performance on Forest Fire Dataset"
+author: "Alison Jing Huang"
+date: "4/15/2018"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+#setwd("~/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire")
+#library(ProjectTemplate)
+#load.project()
+```
+
+```{r load_packages, warning=FALSE, message=FALSE, echo=FALSE}
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(knitr)
+library(broom)
+library(caret)
+library(dplyr)
+library(tidyr)
+library(kernlab)
+library(ROCR)
+library(psych)
+library(reshape2)
+library(gridExtra)
+library(devtools)
+```
+
+```{r echo=FALSE}
+##import data
+df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire/data/forestfires.csv')
+df$month <- as.numeric(df$month)
+df$day <- as.numeric(df$day)
+head(df)
+```
+
+## Model Performance on Naive models with Training set
+
+###1. Linear model on Variable "X"
+```{r}
+par(mgp=c(2,1,0), mar=c(3,3,1,1))
+require(stats)
+lm_x <- lm(area ~ X, data=df)
+glance(lm_x)
+par(mfrow=c(2,2))
+coeff=coefficients(lm_x)
+# equation of the line : 
+# plot
+plot(lm_x)
+abline(lm(df$area~df$X), col="blue")
+```
+
+**Conlusion** :The p-value for each term tests the null hypothesis that the coefficient is equal to zero (no effect). A low p-value (< 0.05) indicates that you can reject the null hypothesis. In other words, a predictor that has a low p-value is likely to be a meaningful addition to your model because changes in the predictor's value are related to changes in the response variable.Based on above result, p-value of Variable X gives 0.1501 which is greater than common alpha level of 0.05, this indicates that **variable X is not statistically significant and hence not a very good predictor variable**, and the R^2 gives 0.004018 which is very close to 0.In addition, The F value is the ratio of the mean regression sum of squares divided by the mean error sum of squares that is displaying a value of 2.077. 
+
+
+###2. Linear model on Variable "Y"
+```{r}
+lm_y <- lm(area ~ Y, data=df)
+lm_y=lm(df$area~df$Y)
+lm_y
+par(mfrow=c(2,2))
+glance(lm_y)
+plot(lm_y)
+```
+**Conlusion**: **variable Y is not statistically significant and hence is a mediocre(not the best) predictor variable since its p-value is 0.3085096**, and the R^2 gives 0.002 which is very close to 0.
+
+###3. Linear model on Variable "Month"
+```{r}
+lm_month <- lm(area ~ month, data=df)
+lm_month=lm(df$area~df$month)
+lm_month
+par(mfrow=c(2,2))
+glance(lm_month)
+```
+**Conlusion**: **variable Month is not statistically significant and hence is a mediocre(not the best) predictor variable since its p-value is 0.4810**, and the R^2 gives 0.000.
+
+
+
+###4. Linear model on Variable "Day"
+```{r}
+lm_day<- lm(area ~ day, data=df)
+lm_day=lm(df$area~df$day)
+lm_day
+par(mfrow=c(2,2))
+summary(lm_day)
+plot(lm_day)
+```
+**Conlusion**: **variable Day is not statistically insignificant because its p-value is 0.6679, therefore making "Day" not a good predictor.**, and the R^2 gives 0.000.
+
+###5. Linear model on Variable "FFMC"
+```{r}
+lm_ffmc <- lm(area~FFMC, data = df)
+lm_ffmc = lm(df$area~df$FFMC)
+lm_ffmc
+par(mfrow=c(2,2))
+summary(lm_ffmc)
+plot(lm_ffmc)
+```
+**Conlusion**: **variable FFMC is relatively statistically significant because its p-value is 0.3626, therefore making "FFMC"a relatvely good predictor.**, and the R^2 gives 0.000.
+
+###6. Linear model on Varialble "DMC"
+```{r}
+lm_dmc <- lm(area ~ DMC, data= df)
+lm_dmc = lm(df$area~df$DMC)
+lm_dmc
+par(mfrow=c(2,2))
+summary(lm_dmc)
+plot(lm_dmc)
+```
+**Conlusion**: **variable DMC is extreme statistically significant because its p-value is 0.09734 which is nearly 0, therefore making "DMC"a very good predictor.**, and the R^2 gives 0.0005.
+
+
+###7. Linear model on Variable "DC"
+```{r}
+lm_dc <- lm(area~DC, data = df)
+lm_dc = lm(df$area~df$DC)
+lm_dc
+par(mfrow=c(2,2))
+summary(lm_dc)
+plot(lm_dc)
+```
+**Conlusion**: **variable DC is statistically significant because its p-value is 0.2624 which is close to 0, therefore making "DC"a very good predictor.**, and the R^2 gives 0.00024.
+
+
+
+
+###8. Linear model on variable "ISI"
+```{r}
+lm_isi <- lm(area~ISI, data = df)
+lm_isi = lm(df$area~df$ISI)
+lm_isi
+par(mfrow=c(2,2))
+summary(lm_isi)
+plot(lm_isi)
+```
+**Conlusion**: **Variable ISI is statistically insignificant because its p-value is 0.8514 which is close to 1, therefore making "DC"a very good predictor.**, and the R^2 gives 0.00024.
+
+
+###9. Linear model on variable "Temperature"
+```{r}
+lm_temp <- lm(area~temp, data = df)
+lm_temp = lm(df$area~df$temp)
+lm_temp
+par(mfrow=c(2,2))
+summary(lm_temp)
+plot(lm_temp)
+```
+**Conlusion**: **Variable Tmperature is statistically very significant because its p-value is 0.0261(less than alpha level of 0.05) and is close to 0, therefore making "tep"a very good predictor.**, and the R^2 gives 0.00009573.
+
+
+###10. Naive model on variable "RH"
+```{r}
+lm_RH <- lm(area~RH, data = df)
+lm_RH = lm(df$area ~ df$RH)
+lm_RH
+par(mfrow=c(2,2))
+tidy(lm_RH)
+summary(lm_RH)
+plot(lm_RH)
+```
+**Conlusion**: **Variable RH(Relative Humidty) is statistically very significant because its p-value is 0.0145(less than alpha level of 0.05) and is close to 0, therefore making "RH"a very good predictor.**, and the R^2 gives 0.005703.
+
+
+###11. Linear model on variable "wind"
+```{r}
+lm_wind <- lm(area~wind, data = df)
+lm_wind = lm(df$area ~ df$wind)
+lm_wind
+par(mfrow=c(2,2))
+tidy(lm_wind)
+plot(lm_wind)
+```
+**Conlusion**: **Variable Tmperature is statistically very significant because its p-value is 0.0261(less than alpha level of 0.05) and is close to 0, therefore making "tep"a very good predictor.**, and the R^2 gives 0.00009573.
+
+
+
+
+###12. Linear model on variable "rain"
+```{r}
+lm_rain <- lm(area~rain, data = df)
+lm_rain = lm(df$area ~ df$rain)
+lm_rain
+tidy(lm_rain)
+par(mfrow=c(2,2))
+plot(lm_rain)
+```
