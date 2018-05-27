@@ -3,8 +3,8 @@ title: "More Data using Machine Learning Methods"
 author: "Alison Jing Huang"
 date: "5/6/2018"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
   word_document: default
 ---
 
@@ -13,14 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
-setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire")
-library('ProjectTemplate')
-load.project()
-```
-
 ```{r echo=FALSE, message=FALSE}
-setwd("/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire")
 library(ggplot2)
 library(magrittr)
 library(tidyverse)
@@ -32,20 +25,21 @@ library(devtools)
 library(randomForest)
 library(tree)
 library(RColorBrewer)
+library(party)
 ```
 
 ## Load the data
 ```{r, echo=FALSE, message=FALSE}
-df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/project/ForestFire/data/forestfires.csv')
+df <- read.csv(file='/Users/Jing/Desktop/CSX415-Data-Science-and-Principles/csx415-project/ForestFire/data/forestfires.csv')
 df$month <- as.numeric(df$month)
 df$day <- as.numeric(df$day)
 head(df)
 ```
 
-## Create the training and test dataset with 80/20 Rule
+## Create the training and test dataset with 70/30 Rule
 ```{r}
 set.seed(517)
-trainRowNumbers <- createDataPartition(df$area, p = 0.8, list = FALSE)
+trainRowNumbers <- createDataPartition(df$area, p = 0.7, list = FALSE)
 trainData <- df[trainRowNumbers,]
 testData <- df[-trainRowNumbers,]
 
@@ -54,7 +48,7 @@ y = trainData$area
 
 ```
 
-## Validate 80/20 rule by checking size of training datset vs. test data
+## Validate 70/30 rule by checking size of training datset vs. test data
 ```{r}
 # Dimension of trainning set
 dim(trainData)
