@@ -3,8 +3,8 @@ title: "Naive Model Performance on Forest Fire Dataset"
 author: "Alison Jing Huang"
 date: "4/15/2018"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
   word_document: default
 ---
 
